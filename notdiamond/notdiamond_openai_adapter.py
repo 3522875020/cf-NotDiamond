@@ -74,7 +74,7 @@ class NotDiamondOpenAIAdapter:
                 ]
 
             # Get model recommendation from NotDiamond
-            result, session_id, provider = self.nd_client.chat.completions.create(
+            result, session_id, provider = self.nd_client.chat.Completions.create(
                 messages=messages,
                 model=model_candidates,
                 timeout=self.timeout,
