@@ -8,19 +8,18 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 首先只复制requirements.txt
-COPY requirements.txt .
+# 首先只复制requirements.txt和setup.py
+COPY requirements.txt setup.py ./
 
 # 安装Python依赖
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt || \
-    echo "Warning: Some packages might not be installed correctly"
+    pip install --no-cache-dir -r requirements.txt
 
 # 复制应用代码
 COPY . .
 
-# 添加当前目录到Python路径
-ENV PYTHONPATH=/app:${PYTHONPATH}
+# 安装本地包
+RUN pip install -e .
 
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1
