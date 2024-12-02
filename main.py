@@ -1,14 +1,20 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from notdiamond.notdiamond_openai_adapter import create_adapter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional, Union
 import os
 from dotenv import load_dotenv
+import logging
+import json
 
 # 加载环境变量
 load_dotenv()
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("notdiamond.notdiamond_openai_adapter")
 
 app = FastAPI(title="NotDiamond OpenAI Adapter")
 
@@ -23,6 +29,42 @@ app.add_middleware(
 
 # 创建适配器实例
 adapter = create_adapter()
+
+# 添加日志记录中间件
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # 记录请求信息
+    try:
+        request_body = await request.json()
+    except Exception:
+        request_body = "<non-JSON body>"
+    
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    logger.info(f"Request body: {json.dumps(request_body, ensure_ascii=False)}")
+
+    # 处理请求
+    response = await call_next(request)
+
+    # 记录响应信息
+    try:
+        # 获取响应体
+        response_body = [chunk async for chunk in response.body_iterator]
+        response_body = b"".join(response_body).decode()
+        response_dict = json.loads(response_body)
+    except Exception:
+        response_body = "<non-JSON body>"
+        response_dict = {}
+    
+    logger.info(f"Response status: {response.status_code}")
+    logger.info(f"Response body: {response_body}")
+
+    # 重新构造响应，因为 body_iterator 已被消费
+    return Response(
+        content=response_body,
+        status_code=response.status_code,
+        headers=dict(response.headers),
+        media_type=response.media_type
+    )
 
 # OpenAI兼容的请求模型
 class ChatMessage(BaseModel):
@@ -77,6 +119,7 @@ async def chat_completions(request: ChatCompletionRequest):
         return JSONResponse(content=response)
     
     except Exception as e:
+        logger.error(f"Error in /v1/chat/completions: {str(e)}")
         error_response = {
             "error": {
                 "message": str(e),
@@ -104,6 +147,7 @@ async def submit_feedback(request: FeedbackRequest):
         )
         return {"status": "success"}
     except Exception as e:
+        logger.error(f"Error in /v1/feedback: {str(e)}")
         error_response = {
             "error": {
                 "message": str(e),

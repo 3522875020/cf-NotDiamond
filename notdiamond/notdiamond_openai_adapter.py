@@ -65,6 +65,7 @@ class NotDiamondOpenAIAdapter:
         start_time = time.time()
         
         try:
+            self.logger.debug("Starting route_request")
             # Use default models if none specified
             if not model_candidates:
                 model_candidates = [
@@ -72,8 +73,10 @@ class NotDiamondOpenAIAdapter:
                     "openai/gpt-3.5-turbo",
                     "anthropic/claude-3-sonnet-20240229"
                 ]
+                self.logger.debug(f"Using default model candidates: {model_candidates}")
 
             # Get model recommendation from NotDiamond
+            self.logger.debug("Calling NotDiamond client for model recommendation")
             result, session_id, provider = self.nd_client.chat.Completions.create(
                 messages=messages,
                 model=model_candidates,
@@ -81,6 +84,7 @@ class NotDiamondOpenAIAdapter:
                 default=self.default_model,
                 **kwargs
             )
+            self.logger.debug(f"Received result: {result}, session_id: {session_id}, provider: {provider.model}")
 
             self.logger.info(
                 f"NotDiamond recommended model: {provider.model} (session_id: {session_id})"
@@ -109,6 +113,8 @@ class NotDiamondOpenAIAdapter:
                 "_routing_time": time.time() - start_time
             }
 
+            self.logger.debug(f"Formatted response: {response}")
+
             return response
 
         except Exception as e:
@@ -116,13 +122,17 @@ class NotDiamondOpenAIAdapter:
             # Fallback to default model
             self.logger.info(f"Falling back to default model: {self.default_model}")
             
-            completion = self.openai_client.chat.completions.create(
-                model=self.default_model.split('/')[-1],
-                messages=messages,
-                **kwargs
-            )
-            
-            return completion.model_dump()
+            try:
+                completion = self.openai_client.chat.completions.create(
+                    model=self.default_model.split('/')[-1],
+                    messages=messages,
+                    **kwargs
+                )
+                self.logger.debug(f"Fallback completion: {completion.model_dump()}")
+                return completion.model_dump()
+            except Exception as fallback_e:
+                self.logger.error(f"Fallback request failed: {str(fallback_e)}")
+                raise RuntimeError("Both NotDiamond routing and fallback failed") from fallback_e
 
     def submit_feedback(
         self,
