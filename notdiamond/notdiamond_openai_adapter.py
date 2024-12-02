@@ -3,6 +3,7 @@ from openai import OpenAI
 from notdiamond.notdiamond_core import NotDiamond
 import logging
 import time
+import os
 
 from dataclasses import dataclass
 
