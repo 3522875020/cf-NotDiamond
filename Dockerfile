@@ -14,7 +14,8 @@ COPY . .
 # 安装Python依赖
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install -e .
+    pip install -e . && \
+    pip list
 
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1

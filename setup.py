@@ -16,4 +16,5 @@ setup(
     package_data={
         "notdiamond": ["*.py"],
     },
+    include_package_data=True,
 ) 
