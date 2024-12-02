@@ -53,4 +53,19 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max 
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+          outputs: type=docker,dest=/tmp/image.tar
+
+      - name: Debug build failure
+        if: failure()
+        run: |
+          echo "::group::Docker Build Logs"
+          docker buildx build . --progress=plain
+          echo "::endgroup::"
+          
+          echo "::group::Environment Info"
+          docker version
+          docker buildx version
+          echo "::endgroup::"
