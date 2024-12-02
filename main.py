@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from notdiamond_openai_adapter import create_adapter
+from notdiamond.notdiamond_openai_adapter import create_adapter
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 import os

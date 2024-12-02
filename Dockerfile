@@ -11,13 +11,16 @@ RUN apt-get update && apt-get install -y \
 # 首先只复制requirements.txt
 COPY requirements.txt .
 
-# 修改requirements.txt中的notdiamond包安装
+# 安装Python依赖
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt || \
     echo "Warning: Some packages might not be installed correctly"
 
 # 复制应用代码
 COPY . .
+
+# 添加当前目录到Python路径
+ENV PYTHONPATH=/app:${PYTHONPATH}
 
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1
