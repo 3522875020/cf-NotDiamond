@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Any
 from openai import OpenAI
-from notdiamond import NotDiamond
+from notdiamond.notdiamond_core import NotDiamond
 import logging
 import time
 
