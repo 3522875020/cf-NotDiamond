@@ -8,19 +8,13 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 首先复制必要的文件
-COPY requirements.txt setup.py ./
-COPY notdiamond notdiamond/
+# 复制所有代码
+COPY . .
 
 # 安装Python依赖
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# 安装本地包
-RUN pip install -e .
-
-# 复制其余应用代码
-COPY main.py .env ./
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install -e .
 
 # 设置环境变量
 ENV PYTHONUNBUFFERED=1
